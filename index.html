@@ -147,6 +147,31 @@ details p { margin-top: 0.6rem; color: var(--muted) }
 footer { border-top: 1px solid var(--line); padding-block: 2.5rem 6rem; color: var(--muted); font-size: 0.875rem }
 footer .wrap { display: flex; justify-content: space-between; gap: 1rem 2rem; flex-wrap: wrap }
 
+/* scroll-driven 3D: the supplier's render, one frame per scroll step */
+.scrolly { padding-block: 0 }
+.scrolly-track { height: 340vh; position: relative }
+.scrolly-stage { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; grid-template-columns: 0.9fr 1.1fr; align-items: center; gap: 2rem }
+.scrolly-stage > * { min-width: 0 }
+.scrolly-copy { display: grid; gap: 1.6rem }
+.callouts { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.1rem }
+.callout { display: grid; gap: 0.3rem; padding-left: 1rem; border-left: 2px solid var(--line); opacity: 0.32; transition: opacity .35s, border-color .35s }
+.callout.on { opacity: 1; border-color: var(--ice) }
+.callout p { color: var(--muted); font-size: 0.975rem }
+.scrolly-canvas { position: relative; height: min(82svh, 720px); aspect-ratio: 640 / 720; max-width: 100%; justify-self: center }
+.scrolly-canvas canvas, .scrolly-canvas img { width: 100%; height: 100%; display: block;
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(70% 70% at 50% 50%, #000 62%, transparent 100%) }
+.progress { height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; max-width: 16rem }
+.progress i { display: block; height: 100%; width: 100%; background: var(--ice); transform-origin: left; transform: scaleX(0) }
+.hint { font: 500 0.75rem/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted) }
+.static .scrolly-track { height: auto }
+.static .scrolly-stage { position: static; height: auto; padding-block: 4rem }
+.static .callout { opacity: 1 }
+.static .hint, .static .progress { display: none }
+
+/* sections ease in as they arrive (only when JS runs; without it everything is simply there) */
+.js .rv { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease }
+.js .rv.in { opacity: 1; transform: none }
+
 /* floating WhatsApp on phones */
 .fab { display: none; position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 30; box-shadow: 0 8px 24px #0009 }
 
@@ -160,6 +185,15 @@ footer .wrap { display: flex; justify-content: space-between; gap: 1rem 2rem; fl
   .ticket { padding-left: 0; border-left: 0; padding-top: 1.5rem; border-top: 1px solid var(--line) }
   .nav a:not(.btn) { display: none }
   .split.flip > :first-child { order: 2 }
+  .scrolly-stage { grid-template-columns: 1fr; grid-template-rows: auto 1fr; align-content: start; gap: 0.75rem; padding-top: 4.5rem }
+  .scrolly-copy { order: 2; gap: 0.9rem }
+  .scrolly-copy h2 { font-size: 1.9rem }
+  .scrolly-canvas { order: 1; height: min(48svh, 420px) }
+  .callouts { position: relative; min-height: 5.5rem }
+  .callout { position: absolute; inset: 0 auto auto 0; opacity: 0 }
+  .callout.on { opacity: 1 }
+  .static .callouts { position: static }
+  .static .callout { position: static }
 }
 @media (max-width: 600px) {
   .stages, .feats, .faq, .videos { grid-template-columns: 1fr }
@@ -215,6 +249,30 @@ footer .wrap { display: flex; justify-content: space-between; gap: 1rem 2rem; fl
       </div>
     </div>
   </div>
+
+  <section class="scrolly" id="brenda" aria-label="Ravent Prime nga brenda">
+    <div class="scrolly-track">
+      <div class="wrap scrolly-stage">
+        <div class="scrolly-copy">
+          <div class="stack">
+            <p class="eyebrow">Nga brenda</p>
+            <h2>Hapeni <b>Ravent Prime</b></h2>
+          </div>
+          <ol class="callouts">
+            <li class="callout on" data-from="0"><h3>Kompakt nga jashtë</h3><p>Një kuti e vetme me ekran dixhital. Zë pak vend në kuzhinë.</p></li>
+            <li class="callout" data-from="0.42"><h3>Gjashtë filtra brenda</h3><p>Çdo fazë ka filtrin e vet, të renditur me radhë nga uji i rrjetit te gota.</p></li>
+            <li class="callout" data-from="0.64"><h3>Pompë e qetë</h3><p>E mban filtrimin në punë edhe kur uji i rrjetit vjen me presion të ulët.</p></li>
+            <li class="callout" data-from="0.84"><h3>Gati për t'u instaluar</h3><p>Ekipi ynë e vendos te ju. Instalimi përfshihet në 800 €.</p></li>
+          </ol>
+          <div class="progress" aria-hidden="true"><i></i></div>
+          <p class="hint" aria-hidden="true">↓ Rrëshqitni për ta hapur</p>
+        </div>
+        <div class="scrolly-canvas">
+          <canvas width="640" height="720" role="img" aria-label="Ravent Prime hapet dhe tregon filtrat brenda"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="ekrani">
     <div class="wrap split">
@@ -393,6 +451,72 @@ footer .wrap { display: flex; justify-content: space-between; gap: 1rem 2rem; fl
     const select = () => { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r) };
     navigator.clipboard ? navigator.clipboard.writeText("+355692387193").then(done, select) : select();
   });
+
+  // Scroll-driven exploded view: seq/f001..f104.jpg are frames of the supplier's 3D render
+  // (closed unit turning, then the parts opening out). Scroll position picks the frame.
+  (function () {
+    const N = 104, section = document.getElementById("brenda");
+    const canvas = section.querySelector("canvas"), ctx = canvas.getContext("2d");
+    const bar = section.querySelector(".progress i"), callouts = [...section.querySelectorAll(".callout")];
+    const track = section.querySelector(".scrolly-track");
+    const src = i => "seq/f" + String(i + 1).padStart(3, "0") + ".jpg";
+    const frames = new Array(N);
+    let shown = -1, want = 0;
+
+    function draw(i) {
+      // nearest frame that has arrived, so a slow connection still shows something
+      for (let d = 0; d < N; d++) {
+        for (const j of [i - d, i + d]) {
+          const im = frames[j];
+          if (im && im.complete && im.naturalWidth) {
+            if (j !== shown) { ctx.drawImage(im, 0, 0, canvas.width, canvas.height); shown = j }
+            return;
+          }
+        }
+      }
+    }
+    function load(order) {
+      order.forEach(i => { if (!frames[i]) { const im = new Image(); im.onload = () => { if (Math.abs(i - want) <= Math.abs(shown - want)) draw(want) }; im.src = src(i); frames[i] = im } });
+    }
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      section.classList.add("static");
+      load([N - 1]); want = N - 1;
+      return;
+    }
+    load([0]);
+    // the rest only once the visitor gets near, every 4th frame first for a quick rough pass
+    new IntersectionObserver((es, ob) => {
+      if (!es[0].isIntersecting) return;
+      ob.disconnect();
+      const order = [];
+      for (let s = 4; s >= 1; s = s >> 1) for (let i = 0; i < N; i += s) if (!order.includes(i)) order.push(i);
+      load(order);
+    }, { rootMargin: "150% 0px" }).observe(section);
+
+    let ticking = false;
+    function update() {
+      ticking = false;
+      const r = track.getBoundingClientRect(), span = r.height - innerHeight;
+      const p = Math.min(1, Math.max(0, -r.top / span));
+      want = Math.round(p * (N - 1));
+      draw(want);
+      bar.style.transform = "scaleX(" + p + ")";
+      let k = 0; callouts.forEach((c, i) => { if (p >= +c.dataset.from) k = i });
+      callouts.forEach((c, i) => c.classList.toggle("on", i === k));
+    }
+    addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update) } }, { passive: true });
+    addEventListener("resize", update);
+    update();
+  })();
+
+  // Gentle fade-up as sections arrive.
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+    document.documentElement.classList.add("js");
+    const els = document.querySelectorAll("section:not(.scrolly) .stack, section .photo, .stage, .feat, .videos figure, .offer, details");
+    els.forEach(el => el.classList.add("rv"));
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target) } }), { rootMargin: "0px 0px -8% 0px" });
+    els.forEach(el => io.observe(el));
+  }
 </script>
 </body>
 </html>
